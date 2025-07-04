@@ -2,19 +2,30 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Firebase Switch</title>
+  <title>ควบคุมและแสดงสถานะ 2 อุปกรณ์</title>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       text-align: center;
-      margin-top: 100px;
+      margin-top: 50px;
+    }
+    .device {
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px auto;
+      width: 300px;
+    }
+    .status {
+      font-size: 24px;
+      margin-top: 10px;
     }
     button {
-      font-size: 24px;
-      padding: 15px 40px;
-      margin: 10px;
+      padding: 10px 30px;
+      margin: 5px;
+      font-size: 18px;
       cursor: pointer;
     }
     .on {
@@ -29,14 +40,27 @@
 </head>
 <body>
 
-  <h1>ควบคุมสถานะอุปกรณ์</h1>
-  <button class="on" onclick="setStatus(1)">เปิด</button>
-  <button class="off" onclick="setStatus(0)">ปิด</button>
+  <h2>ควบคุมและแสดงสถานะอุปกรณ์</h2>
+
+  <!-- Device 1 -->
+  <div class="device">
+    <h3>อุปกรณ์ 1</h3>
+    <button class="on" onclick="setStatus('device1', 1)">เปิด</button>
+    <button class="off" onclick="setStatus('device1', 0)">ปิด</button>
+    <div id="status-device1" class="status">สถานะ: โหลดข้อมูล...</div>
+  </div>
+
+  <!-- Device 2 -->
+  <div class="device">
+    <h3>อุปกรณ์ 2</h3>
+    <button class="on" onclick="setStatus('device2', 1)">เปิด</button>
+    <button class="off" onclick="setStatus('device2', 0)">ปิด</button>
+    <div id="status-device2" class="status">สถานะ: โหลดข้อมูล...</div>
+  </div>
 
   <script>
-    // Firebase config
     const firebaseConfig = {
-     apiKey: "AIzaSyDi4RdcNqe2llnP8mCQgwN02AO9s1wuxUI",
+      apiKey: "AIzaSyDi4RdcNqe2llnP8mCQgwN02AO9s1wuxUI",
   authDomain: "myg4iot.firebaseapp.com",
   projectId: "myg4iot",
   storageBucket: "myg4iot.firebasestorage.app",
@@ -45,20 +69,35 @@
   measurementId: "G-HHYXG8KT5P"
     };
 
-    // Init Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Function to set status
-    function setStatus(value) {
-      db.collection("devices").doc("device1").set({
-        status: value
-      }).then(() => {
-        alert("สถานะถูกเปลี่ยนเป็น " + value);
-      }).catch((error) => {
-        console.error("เกิดข้อผิดพลาด: ", error);
-      });
+    // เปลี่ยนสถานะอุปกรณ์
+    function setStatus(device, value) {
+      db.collection("devices").doc(device).set({ status: value }, { merge: true })
+        .then(() => console.log(`เปลี่ยน ${device} เป็น ${value}`))
+        .catch((error) => console.error("เกิดข้อผิดพลาด:", error));
     }
+
+    // รับสถานะแบบเรียลไทม์
+    function listenStatus(device) {
+      const statusDiv = document.getElementById(`status-${device}`);
+      db.collection("devices").doc(device)
+        .onSnapshot((doc) => {
+          if (doc.exists) {
+            const status = doc.data().status;
+            statusDiv.textContent = "สถานะ: " + (status === 1 ? "เปิด" : "ปิด");
+          } else {
+            statusDiv.textContent = "สถานะ: ไม่มีข้อมูล";
+          }
+        }, (error) => {
+          statusDiv.textContent = "สถานะ: โหลดผิดพลาด";
+          console.error(error);
+        });
+    }
+
+    listenStatus("device1");
+    listenStatus("device2");
   </script>
 
 </body>
