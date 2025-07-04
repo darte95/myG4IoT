@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>สวิตช์ควบคุม</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 80px;
+      height: 40px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: red;
+      transition: 0.4s;
+      border-radius: 40px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 30px;
+      width: 30px;
+      left: 5px;
+      bottom: 5px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: green;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(40px);
+    }
+
+    h2 {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>สถานะอุปกรณ์</h2>
+  <label class="switch">
+    <input type="checkbox" id="toggleSwitch" onchange="updateStatus(this.checked)">
+    <span class="slider"></span>
+  </label>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBN8OuiMFTZ7CrSe_Psy4PSW4xSX7bPWyA",
+      authDomain: "myiot-92b38.firebaseapp.com",
+      projectId: "myiot-92b38",
+      storageBucket: "myiot-92b38.firebasestorage.app",
+      messagingSenderId: "729539743207",
+      appId: "1:729539743207:web:8e2f298ea6f7e9b6118142",
+      measurementId: "G-SBEC3WLZ1M"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const toggleSwitch = document.getElementById("toggleSwitch");
+
+    // โหลดสถานะเริ่มต้นจาก Firestore
+    db.collection("devices").doc("device1").get().then((doc) => {
+      if (doc.exists) {
+        toggleSwitch.checked = doc.data().status === 1;
+      }
+    });
+
+    // อัปเดตสถานะเมื่อสวิตช์ถูกเปลี่ยน
+    function updateStatus(isOn) {
+      const value = isOn ? 1 : 0;
+      db.collection("devices").doc("device1").set({
+        status: value
+      }).then(() => {
+        console.log("อัปเดตสถานะเรียบร้อย:", value);
+      });
+    }
+  </script>
+
+</body>
+</html>
